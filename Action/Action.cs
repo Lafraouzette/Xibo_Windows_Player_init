@@ -1,0 +1,177 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows;
+using System.Xml;
+
+namespace XiboClient.Action
+{
+    public class Action
+    {
+        public int Id { get; set; }
+        public string ActionType { get; set; }
+        public string TriggerType { get; set; }
+        public string TriggerCode { get; set; }
+        public int WidgetId { get; set; }
+        public int SourceId { get; set; }
+        public string Source { get; set; }
+        public int TargetId { get; set; }
+        public string Target { get; set; }
+        public string LayoutCode { get; set; }
+        public bool Bubble { get; set; }
+        public bool IsDrawer { get; set; }
+        public string CommandCode { get; set; }
+
+        public Rect Rect { get; set; }
+
+        /// <summary>
+        /// Create an Action from XmlNode
+        /// </summary>
+        /// <param name="node"></param>
+        /// <returns></returns>
+        public static Action CreateFromXmlNode(XmlNode node, int top, int left, int width, int height, bool isDrawer)
+        {
+            XmlAttributeCollection attributes = node.Attributes;
+
+            return new Action
+            {
+                Id = int.Parse(attributes["id"].Value),
+                ActionType = attributes["actionType"]?.Value,
+                TriggerType = attributes["triggerType"]?.Value,
+                TriggerCode = attributes["triggerCode"]?.Value,
+                WidgetId = string.IsNullOrEmpty(attributes["widgetId"]?.Value) ? 0 : int.Parse(attributes["widgetId"].Value),
+                SourceId = string.IsNullOrEmpty(attributes["sourceId"]?.Value) ? 0 : int.Parse(attributes["sourceId"].Value),
+                Source = attributes["source"]?.Value,
+                TargetId = string.IsNullOrEmpty(attributes["targetId"]?.Value) ? 0 : int.Parse(attributes["targetId"].Value),
+                Target = attributes["target"]?.Value,
+                LayoutCode = attributes["layoutCode"]?.Value,
+                Bubble = false,
+                IsDrawer = isDrawer,
+                Rect = new Rect(left, top, width, height)
+            };
+        }
+
+        /// <summary>
+        /// Create an action from a schedule XML node
+        /// </summary>
+        /// <param name="node"></param>
+        /// <returns></returns>
+        public static Action CreateFromScheduleNode(XmlNode node)
+        {
+            XmlAttributeCollection attributes = node.Attributes;
+
+            return new Action
+            {
+                Id = int.Parse(attributes["scheduleid"].Value),
+                ActionType = attributes["actionType"]?.Value,
+                TriggerType = "webhook",
+                TriggerCode = attributes["triggerCode"]?.Value,
+                WidgetId = 0,
+                SourceId = 0,
+                Source = "schedule",
+                TargetId = 0,
+                Target = "screen",
+                LayoutCode = attributes["layoutCode"]?.Value,
+                Bubble = false,
+                IsDrawer = false,
+                CommandCode = attributes["commandCode"]?.Value,
+                Rect = new Rect(0, 0, 0, 0)
+            };
+        }
+
+        /// <summary>
+        /// Create a list of Actions from an XmlNodeList
+        /// </summary>
+        /// <param name="nodeList"></param>
+        /// <returns></returns>
+        public static List<Action> CreateFromXmlNodeList(XmlNodeList nodeList)
+        {
+            return CreateFromXmlNodeList(nodeList, 0, 0, 0, 0, false);
+        }
+
+        /// <summary>
+        /// Create a list of Actions from an XmlNodeList
+        /// </summary>
+        /// <param name="nodeList"></param>
+        /// <returns></returns>
+        public static List<Action> CreateFromXmlNodeList(XmlNodeList nodeList, bool isDrawer)
+        {
+            return CreateFromXmlNodeList(nodeList, 0, 0, 0, 0, isDrawer);
+        }
+
+        /// <summary>
+        /// Create a list of Actions from an XmlNodeList
+        /// </summary>
+        /// <param name="nodeList"></param>
+        /// <returns></returns>
+        public static List<Action> CreateFromXmlNodeList(XmlNodeList nodeList, int top, int left, int width, int height)
+        {
+            return CreateFromXmlNodeList(nodeList, top, left, width, height, false);
+        }
+
+        /// <summary>
+        /// Create a list of Actions from an XmlNodeList
+        /// </summary>
+        /// <param name="nodeList"></param>
+        /// <param name="isDrawer"></param>
+        /// <returns></returns>
+        public static List<Action> CreateFromXmlNodeList(XmlNodeList nodeList, int top, int left, int width, int height, bool isDrawer)
+        {
+            List<Action> actions = new List<Action>();
+            foreach (XmlNode node in nodeList)
+            {
+                try
+                {
+                    actions.Add(CreateFromXmlNode(node, top, left, width, height, isDrawer));
+                }
+                catch (Exception e)
+                {
+                    Trace.WriteLine(new LogMessage("Action", "CreateFromXmlNodeList: create from node failed. e = " + e.Message), LogType.Info.ToString());
+                }
+            }
+            return actions;
+        }
+
+        /// <summary>
+        /// Get Priority for action source
+        /// </summary>
+        /// <param name="source"></param>
+        /// <returns></returns>
+        public static int PriorityForActionSource(string source)
+        {
+            switch (source)
+            {
+                case "widget":
+                    return 1;
+
+                case "region":
+                    return 2;
+
+                case "layout":
+                    return 3;
+
+                default:
+                    return 4;
+            }
+        }
+
+        /// <summary>
+        /// Is the point inside this action
+        /// </summary>
+        /// <param name="point"></param>
+        /// <returns></returns>
+        public bool IsPointInside(Point point)
+        {
+            // Perhaps counter intuitiative, but a rectangle with no dimensions should always be considered active.
+            if (Rect.Width == 0 && Rect.Height == 0)
+            {
+                return true;
+            }
+
+            return Rect.Contains(point);
+        }
+    }
+}
