@@ -19,3 +19,6 @@ Le Xibo Windows Player communique avec le CMS via des requêtes HTTP/HTTPS. Il t
 
 ## 🌐 Connexion au serveur
 Le Xibo Windows Player se connecte au serveur CMS en utilisant des requêtes HTTP/HTTPS. Le client envoie des requêtes pour télécharger le contenu, les plannings et les configurations nécessaires. En retour, le serveur CMS répond avec les données demandées, permettant ainsi au Player de mettre à jour et d'afficher le contenu multimédia de manière fluide et continue. En cas d'erreur de connexion, le Player est conçu pour gérer les exceptions et assurer une lecture ininterrompue des médias déjà téléchargés.
+
+links : 
+https://community.xibo.org.uk/t/net-xibo-client/5885/2
